@@ -1,8 +1,10 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:developer' as devtools show log;
 
 import 'package:notes_app/constants/routes.dart';
+import 'package:notes_app/services/auth/auth_exceptions.dart';
+import 'package:notes_app/services/auth/auth_service.dart';
+import 'package:notes_app/utils/show_error_dialog.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({Key? key}) : super(key: key);
@@ -57,24 +59,19 @@ class _RegisterViewState extends State<RegisterView> {
               final password = _password.text;
               try {
                 final userCredential =
-                await FirebaseAuth.instance.createUserWithEmailAndPassword(
-                  email: email,
-                  password: password,
-                );
+                await AuthService.firebase().createUser(
+                    email: email, password: password);
                 //sending email for verification
-                final user = FirebaseAuth.instance.currentUser;
-                await user?.sendEmailVerification();
+                AuthService.firebase().sendEmailVerification();
                 //PUSH THE VIEW INSTEAD OF REPLACING THE SCREEN
                 Navigator.of(context).pushNamed(verifyEmailView);
                 // devtools.log(userCredential.toString());
-              } on FirebaseAuthException catch (e) {
-                if (e.code == 'weak-password') {
-                  devtools.log('Weak password');
-                } else if (e.code == 'email-already-in-use') {
-                  devtools.log('Email is already in use');
-                } else if (e.code == 'invalid-email') {
-                  devtools.log('invalid email entered');
-                }
+              } on WeakPasswordAuthException {
+                await showErrorDialog(context, "Weak Password");
+              } on EmailAlreadyInUseAuthException {
+                await showErrorDialog(context, "Email already in use!");
+              } on InvalidEmailAuthException {
+                await showErrorDialog(context, "Invalid Email");
               }
             },
             child: const Text('Register'),
