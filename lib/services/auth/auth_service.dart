@@ -7,6 +7,7 @@ import '../../firebase_options.dart';
 
 //EXPOSES THE FUNCTIONALITY OF FIREBASEAUTHPROVIDER TO UI,
 //IN ORDER TO USE IT WE NEED A PROVIDE
+//THIS IS A DEPENDENCY INJECTION (IN A NUTSHELL)
 class AuthService implements AuthProvider {
   final AuthProvider provider;
   const AuthService(this.provider);
