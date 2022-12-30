@@ -1,19 +1,20 @@
-
 import 'package:flutter/material.dart';
 import 'package:notes_app/services/auth/auth_service.dart';
+import 'package:notes_app/services/crud/notes_service.dart';
 
 import '../constants/routes.dart';
-import 'package:notes_app/services/crud/notes_service.dart';
 import '../enum/menu_action.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
+
   @override
   _NotesViewState createState() => _NotesViewState();
 }
-class _NotesViewState extends State<NotesView> {
 
+class _NotesViewState extends State<NotesView> {
   late final NotesService _notesService;
+
   String get userEmail => AuthService.firebase().currentUser!.email!;
 
   @override
@@ -32,12 +33,19 @@ class _NotesViewState extends State<NotesView> {
     _notesService.close();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Main UI'),
         actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.of(context).pushNamed(newNotesRoute);
+            },
+            icon: const Icon(Icons.add),
+            ),
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
               switch (value) {
@@ -47,7 +55,7 @@ class _NotesViewState extends State<NotesView> {
                     await AuthService.firebase().logOut();
                     Navigator.of(context).pushNamedAndRemoveUntil(
                       loginRoute,
-                          (_) => false,
+                      (_) => false,
                     );
                   }
               }
@@ -74,7 +82,8 @@ class _NotesViewState extends State<NotesView> {
                 stream: _notesService.allNotes,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
-                    //NO ConnectionState.done FOR SteamBuilder (IT ALWAYS REMAIN IN THE waiting state)
+                    //NO ConnectionState.done FOR SteamBuilder (IT ALWAYS REMAIN IN THE waiting or active state)
+                    case ConnectionState.active:  //explained 21:02
                     case ConnectionState.waiting:
                       return const Text('Waiting for all notes...');
                     default:
@@ -90,6 +99,7 @@ class _NotesViewState extends State<NotesView> {
     );
   }
 }
+
 Future<bool> showLogOutDialog(BuildContext context) {
   return showDialog<bool>(
     context: context,

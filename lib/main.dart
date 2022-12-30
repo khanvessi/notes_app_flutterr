@@ -7,8 +7,10 @@ import 'package:notes_app/utils/show_error_dialog.dart';
 import 'package:notes_app/views/login_view.dart';
 import 'package:notes_app/views/register_view.dart';
 import 'package:notes_app/views/verify_email_view.dart';
+import 'package:path/path.dart';
 
-import 'views/notes_view.dart';
+import 'notes/new_note_view.dart';
+import 'notes/notes_view.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(
@@ -23,6 +25,7 @@ void main() {
         registerRoute: (context) => const RegisterView(),
         notesRoute: (context) => const NotesView(),
         verifyEmailView: (context) => const VerifyEmailView(),
+        newNotesRoute: (context) => const NewNoteView(),
       },
     ),
   );
