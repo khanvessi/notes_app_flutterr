@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:notes_app/notes/notes_list_view.dart';
 import 'package:notes_app/services/auth/auth_service.dart';
 import 'package:notes_app/services/crud/notes_service.dart';
 
 import '../constants/routes.dart';
 import '../enum/menu_action.dart';
+import '../utils/dialogs/logout_dialog.dart';
 
 class NotesView extends StatefulWidget {
   const NotesView({Key? key}) : super(key: key);
@@ -15,7 +17,11 @@ class NotesView extends StatefulWidget {
 class _NotesViewState extends State<NotesView> {
   late final NotesService _notesService;
 
-  String get userEmail => AuthService.firebase().currentUser!.email!;
+  String get userEmail =>
+      AuthService
+          .firebase()
+          .currentUser!
+          .email!;
 
   @override
   void initState() {
@@ -48,7 +54,7 @@ class _NotesViewState extends State<NotesView> {
                     await AuthService.firebase().logOut();
                     Navigator.of(context).pushNamedAndRemoveUntil(
                       loginRoute,
-                      (_) => false,
+                          (_) => false,
                     );
                   }
               }
@@ -70,30 +76,20 @@ class _NotesViewState extends State<NotesView> {
         builder: (context, snapshot) {
           switch (snapshot.connectionState) {
             case ConnectionState.done:
-              //SIMILAR TO futureBuilder BUT IT LISTENS TO streams
+            //SIMILAR TO futureBuilder BUT IT LISTENS TO streams
               return StreamBuilder(
                 stream: _notesService.allNotes,
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
-                    //NO ConnectionState.done FOR SteamBuilder (IT ALWAYS REMAIN IN THE waiting or active state)
+                  //NO ConnectionState.done FOR SteamBuilder (IT ALWAYS REMAIN IN THE waiting or active state)
                     case ConnectionState.active: //explained 21:02
                     case ConnectionState.waiting:
                       if (snapshot.hasData) {
                         final allNotes = snapshot.data as List<DatabaseNote>;
-                        return ListView.builder(
-                          itemCount: allNotes.length,
-                          itemBuilder: (context, index) {
-                            final note = allNotes[index];
-                            //DISPLAY EVERY NOTE HERE
-                            return ListTile(
-                              title: Text(
-                                note.text,
-                                maxLines: 1,
-                                //CAPING
-                                softWrap: true,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            );
+                        return NotesListView(
+                          notes: allNotes,
+                          onDeleteNote: (note) async {
+                            await _notesService.deleteNote(id: note.id);
                           },
                         );
                       } else {
@@ -113,28 +109,3 @@ class _NotesViewState extends State<NotesView> {
   }
 }
 
-Future<bool> showLogOutDialog(BuildContext context) {
-  return showDialog<bool>(
-    context: context,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Sign out'),
-        content: const Text('Are you sure you want to sign out?'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(false);
-            },
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop(true);
-            },
-            child: const Text('Log out'),
-          ),
-        ],
-      );
-    },
-  ).then((value) => value ?? false);
-}
