@@ -28,13 +28,6 @@ class _NotesViewState extends State<NotesView> {
   }
 
   @override
-  void dispose() {
-    //OPEN FUNC IS ASYNC BUT IT'S OKAY TO WAIT HERE
-    _notesService.close();
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -45,7 +38,7 @@ class _NotesViewState extends State<NotesView> {
               Navigator.of(context).pushNamed(newNotesRoute);
             },
             icon: const Icon(Icons.add),
-            ),
+          ),
           PopupMenuButton<MenuAction>(
             onSelected: (value) async {
               switch (value) {
@@ -83,9 +76,29 @@ class _NotesViewState extends State<NotesView> {
                 builder: (context, snapshot) {
                   switch (snapshot.connectionState) {
                     //NO ConnectionState.done FOR SteamBuilder (IT ALWAYS REMAIN IN THE waiting or active state)
-                    case ConnectionState.active:  //explained 21:02
+                    case ConnectionState.active: //explained 21:02
                     case ConnectionState.waiting:
-                      return const Text('Waiting for all notes...');
+                      if (snapshot.hasData) {
+                        final allNotes = snapshot.data as List<DatabaseNote>;
+                        return ListView.builder(
+                          itemCount: allNotes.length,
+                          itemBuilder: (context, index) {
+                            final note = allNotes[index];
+                            //DISPLAY EVERY NOTE HERE
+                            return ListTile(
+                              title: Text(
+                                note.text,
+                                maxLines: 1,
+                                //CAPING
+                                softWrap: true,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            );
+                          },
+                        );
+                      } else {
+                        return const CircularProgressIndicator();
+                      }
                     default:
                       return const CircularProgressIndicator();
                   }
